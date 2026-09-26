@@ -1,0 +1,795 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Sổ Tiết Kiệm</title>
+<meta name="theme-color" content="#2f6f4f" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#12140f" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Tiết Kiệm">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+  :root{
+    --bg:#f5f4ee;
+    --surface:#ffffff;
+    --surface-2:#eef1ea;
+    --text:#1b2019;
+    --text-muted:#5f6b5c;
+    --border:#dee3d8;
+    --accent:#2f6f4f;
+    --accent-ink:#ffffff;
+    --accent-soft:#e2ede5;
+    --gold:#b8842a;
+    --track:#e7ebe0;
+    --danger:#b3423a;
+    --behind-bg:#fbeed9;
+    --behind-ink:#8a5a12;
+    --done-bg:#e4e9fb;
+    --done-ink:#3c4aa0;
+
+    --series-1:#2a78d6;
+    --series-2:#eb6834;
+    --series-3:#1baf7a;
+    --series-4:#eda100;
+    --series-5:#e87ba4;
+    --series-6:#3f8f3f;
+    --series-7:#4a3aa7;
+    --series-8:#e34948;
+
+    --shadow: 0 1px 2px rgba(27,32,25,.04), 0 8px 24px -12px rgba(27,32,25,.18);
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#12140f;
+      --surface:#1a1f19;
+      --surface-2:#20261e;
+      --text:#edf0e9;
+      --text-muted:#98a494;
+      --border:#2b3227;
+      --accent:#5fb98a;
+      --accent-ink:#0c140f;
+      --accent-soft:#1e2e24;
+      --gold:#d9a94a;
+      --track:#242b21;
+      --danger:#e08579;
+      --behind-bg:#33280f;
+      --behind-ink:#d9a94a;
+      --done-bg:#20233c;
+      --done-ink:#9aa6f0;
+
+      --series-1:#3987e5;
+      --series-2:#d95926;
+      --series-3:#199e70;
+      --series-4:#c98500;
+      --series-5:#d55181;
+      --series-6:#59a85c;
+      --series-7:#9085e9;
+      --series-8:#e66767;
+
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+    }
+  }
+
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    font-size:14px;
+    -webkit-font-smoothing:antialiased;
+    -webkit-tap-highlight-color:transparent;
+  }
+  [hidden]{display:none !important;}
+
+  .wrap{
+    max-width:700px;
+    margin:0 auto;
+    padding:calc(24px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(48px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
+  }
+
+  .top{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+    margin-bottom:24px;
+  }
+  .top h1{
+    font-family:var(--serif);
+    font-weight:600;
+    font-size:clamp(26px,4vw,32px);
+    margin:0 0 4px;
+  }
+  .top .sub{font-size:13px; color:var(--text-muted);}
+
+  .btn{
+    border:none;
+    border-radius:10px;
+    padding:11px 18px;
+    font-size:14px;
+    font-weight:600;
+    font-family:inherit;
+    cursor:pointer;
+    transition:background .15s ease, opacity .15s ease, transform .1s ease;
+  }
+  .btn:active{transform:translateY(1px);}
+  .btn-primary{background:var(--accent); color:var(--accent-ink);}
+  .btn-primary:hover{opacity:.9;}
+  .btn-secondary{background:var(--surface-2); color:var(--text); border:1px solid var(--border);}
+  .btn-secondary:hover{background:var(--track);}
+  .btn-text{background:transparent; border:none; color:var(--accent); padding:6px 10px; font-weight:600; font-size:16px; cursor:pointer;}
+  .btn-danger{background:transparent; border:none; color:var(--danger); padding:6px 10px; font-size:16px; cursor:pointer;}
+  .btn:disabled{opacity:.5; cursor:not-allowed;}
+
+  .summary{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;
+    margin-bottom:28px;
+  }
+  /* Amounts like 30.000.000.000 ₫ need the full row on a phone. */
+  @media (max-width:520px){ .summary .stat.money{grid-column:1 / -1;} }
+  .summary .stat{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:14px 16px;
+    box-shadow:var(--shadow);
+    min-width:0;
+  }
+  .summary .stat .label{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--text-muted);
+    margin-bottom:6px;
+  }
+  .summary .stat .value{
+    font-family:var(--mono);
+    font-variant-numeric:tabular-nums;
+    font-size:18px;
+    font-weight:600;
+    overflow-wrap:anywhere;
+  }
+
+  .goal-list{display:flex; flex-direction:column; gap:14px;}
+
+  .goal-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:20px 20px;
+    box-shadow:var(--shadow);
+  }
+  .goal-card-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
+    margin-bottom:12px;
+  }
+  .goal-card-top h3{
+    font-family:var(--serif);
+    font-weight:600;
+    margin:0 0 4px 0;
+    font-size:19px;
+    overflow-wrap:anywhere;
+  }
+  .goal-meta{font-size:12.5px; color:var(--text-muted);}
+  .goal-actions{display:flex; gap:4px; flex-shrink:0;}
+
+  .progress-row{display:flex; align-items:center; gap:12px; margin:12px 0 8px;}
+  .progress-track{
+    flex:1;
+    height:14px;
+    background:var(--track);
+    border-radius:999px;
+    overflow:hidden;
+    display:flex;
+    gap:2px;
+  }
+  .progress-seg{height:100%;}
+  .progress-pct{
+    font-family:var(--mono);
+    font-variant-numeric:tabular-nums;
+    font-weight:600;
+    font-size:14px;
+    min-width:46px;
+    text-align:right;
+  }
+
+  .goal-amounts{
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:4px 12px;
+    font-size:13px;
+    color:var(--text-muted);
+    margin-bottom:14px;
+    font-family:var(--mono);
+    font-variant-numeric:tabular-nums;
+  }
+  .goal-amounts b{color:var(--text); font-weight:600;}
+
+  .goal-footer{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+
+  .badge{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    font-size:12px;
+    font-weight:600;
+    padding:4px 10px;
+    border-radius:999px;
+  }
+  .badge::before{content:""; width:6px; height:6px; border-radius:50%; background:currentColor;}
+  .badge.on-track{background:var(--accent-soft); color:var(--accent);}
+  .badge.behind{background:var(--behind-bg); color:var(--behind-ink);}
+  .badge.done{background:var(--done-bg); color:var(--done-ink);}
+
+  .empty-state{text-align:center; color:var(--text-muted); margin-top:64px; font-size:15px;}
+  .empty-state .big{font-family:var(--serif); font-size:22px; color:var(--text); margin-bottom:8px;}
+
+  .data-panel{
+    margin-top:36px;
+    padding:16px 18px;
+    border:1px dashed var(--border);
+    border-radius:14px;
+    color:var(--text-muted);
+    font-size:13px;
+  }
+  .data-panel p{margin:0 0 12px;}
+  .data-panel .row{display:flex; gap:8px; flex-wrap:wrap;}
+
+  /* Modal */
+  .modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(15,18,13,.5);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:16px;
+    z-index:100;
+  }
+  .modal{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:24px 22px;
+    width:100%;
+    max-width:400px;
+    max-height:85vh;
+    overflow-y:auto;
+    box-shadow:var(--shadow);
+  }
+  .modal h2{font-family:var(--serif); font-weight:600; margin-top:0; font-size:19px;}
+  .modal form{display:flex; flex-direction:column; gap:14px;}
+  .modal label{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    font-size:12.5px;
+    color:var(--text-muted);
+    font-weight:600;
+  }
+  .modal input{
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:10px 11px;
+    font-size:16px; /* >=16px stops iOS zooming on focus */
+    font-family:inherit;
+    background:var(--bg);
+    color:var(--text);
+    width:100%;
+    min-width:0;
+  }
+  .modal input:focus{outline:2px solid var(--accent); outline-offset:1px;}
+  .modal-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:4px;}
+
+  .history-list{list-style:none; margin:0; padding:0; max-height:320px; overflow-y:auto; border-top:1px solid var(--border);}
+  .history-list li{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:9px 0; border-bottom:1px solid var(--border); font-size:14px;
+  }
+  .history-list .h-date{color:var(--text-muted); font-size:12.5px;}
+  .history-list .h-amount{
+    font-weight:600; color:var(--accent); flex:1; text-align:right;
+    font-family:var(--mono); font-variant-numeric:tabular-nums;
+  }
+  .history-list .h-actions{display:flex; gap:2px; flex-shrink:0;}
+
+  button:focus-visible, input:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>Sổ Tiết Kiệm</h1>
+      <div class="sub">Dữ liệu lưu ngay trên máy này, dùng được khi không có mạng</div>
+    </div>
+    <button class="btn btn-primary" id="btnNewGoal">+ Tạo khoản</button>
+  </div>
+
+  <section id="summary" class="summary" hidden></section>
+
+  <div id="emptyState" class="empty-state" hidden>
+    <div class="big">Chưa có khoản tiết kiệm nào</div>
+    Bấm "Tạo khoản" để bắt đầu, hoặc "Khôi phục" nếu có tệp sao lưu.
+  </div>
+
+  <section id="goalList" class="goal-list"></section>
+
+  <section class="data-panel">
+    <p>Dữ liệu chỉ nằm trên máy này. Xóa app hoặc xóa dữ liệu trình duyệt sẽ mất hết, nên hãy sao lưu định kỳ. <span id="lastBackup"></span></p>
+    <div class="row">
+      <button class="btn btn-secondary" id="btnExport">Sao lưu</button>
+      <button class="btn btn-secondary" id="btnImport">Khôi phục</button>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+    </div>
+  </section>
+</div>
+
+<!-- Modal: Tạo / sửa khoản tiết kiệm -->
+<div id="modalGoal" class="modal-overlay" hidden>
+  <div class="modal">
+    <h2 id="goalModalTitle">Tạo khoản tiết kiệm</h2>
+    <form id="formGoal">
+      <label>Tên khoản tiết kiệm
+        <input type="text" id="goalName" required placeholder="Vd: Mua xe máy">
+      </label>
+      <label>Số tiền mục tiêu (VNĐ)
+        <input type="number" id="goalTarget" required min="1" inputmode="numeric" placeholder="Vd: 20000000">
+      </label>
+      <label>Ngày bắt đầu
+        <input type="date" id="goalStartDate" required>
+      </label>
+      <label>Ngày kết thúc (dự kiến)
+        <input type="date" id="goalEndDate" required>
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="btnCancelGoal">Hủy</button>
+        <button type="submit" class="btn btn-primary" id="btnSubmitGoal">Tạo</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Nạp / sửa lần nạp -->
+<div id="modalDeposit" class="modal-overlay" hidden>
+  <div class="modal">
+    <h2 id="depositModalTitle">Nhập khoản tiết kiệm</h2>
+    <form id="formDeposit">
+      <label>Số tiền (VNĐ)
+        <input type="number" id="depositAmount" required min="1" inputmode="numeric" placeholder="Vd: 500000">
+      </label>
+      <label>Ngày
+        <input type="date" id="depositDate" required>
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="btnCancelDeposit">Hủy</button>
+        <button type="submit" class="btn btn-primary" id="btnSubmitDeposit">Thêm</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Lịch sử -->
+<div id="modalHistory" class="modal-overlay" hidden>
+  <div class="modal">
+    <h2 id="historyTitle">Lịch sử nạp tiền</h2>
+    <ul id="historyList" class="history-list"></ul>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" id="btnCloseHistory">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- Storage ---------- */
+const STORAGE_KEY = 'soTietKiem.goals.v1';
+const BACKUP_KEY = 'soTietKiem.lastBackup';
+
+function loadGoals(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  }catch(e){ return []; }
+}
+function saveGoals(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(goals));
+    return true;
+  }catch(e){
+    alert('Không lưu được dữ liệu trên máy (' + (e && e.name || 'lỗi') + ').');
+    return false;
+  }
+}
+// Ask the browser not to evict our data when storage runs low.
+if(navigator.storage && navigator.storage.persist){
+  navigator.storage.persist().catch(()=>{});
+}
+
+/* ---------- State ---------- */
+let goals = loadGoals();
+let activeGoalId = null;
+let editingDepositId = null;
+let editingGoalId = null;
+
+/* ---------- Helpers ---------- */
+function formatVND(n){ return Number(n||0).toLocaleString('vi-VN') + ' ₫'; }
+function formatDate(d){ const [y,m,day] = d.split('-'); return `${day}/${m}/${y}`; }
+// Local calendar date, not UTC — otherwise before 7am in Vietnam this returns yesterday.
+function todayISO(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function escapeHtml(s){ const div=document.createElement('div'); div.textContent=s; return div.innerHTML; }
+function goalTotal(g){ return (g.deposits||[]).reduce((s,d)=>s+d.amount,0); }
+function goalPercent(g){ if(!g.target || g.target<=0) return 0; return Math.min(100, Math.round((goalTotal(g)/g.target)*1000)/10); }
+function daysBetween(a,b){ return Math.round((new Date(b)-new Date(a))/86400000); }
+function goalStatus(g){
+  const pct = goalPercent(g);
+  if(pct>=100) return {label:'Hoàn thành', cls:'done'};
+  const today = todayISO();
+  const totalDays = Math.max(1, daysBetween(g.startDate, g.endDate));
+  const elapsedDays = Math.min(totalDays, Math.max(0, daysBetween(g.startDate, today)));
+  const expectedPct = (elapsedDays/totalDays)*100;
+  if(pct+5 >= expectedPct) return {label:'Đúng tiến độ', cls:'on-track'};
+  return {label:'Chậm tiến độ', cls:'behind'};
+}
+function commit(){
+  if(!saveGoals()) return false;
+  render();
+  return true;
+}
+
+/* ---------- Render ---------- */
+function render(){
+  renderSummary();
+  renderGoalList();
+  renderLastBackup();
+}
+
+function renderSummary(){
+  const el = document.getElementById('summary');
+  if(goals.length===0){ el.hidden = true; return; }
+  el.hidden = false;
+  const totalTarget = goals.reduce((s,g)=>s+g.target,0);
+  const totalSaved = goals.reduce((s,g)=>s+goalTotal(g),0);
+  const overallPct = totalTarget>0 ? Math.round((totalSaved/totalTarget)*1000)/10 : 0;
+  el.innerHTML = `
+    <div class="stat money"><div class="label">Đã tiết kiệm</div><div class="value">${formatVND(totalSaved)}</div></div>
+    <div class="stat money"><div class="label">Mục tiêu tổng</div><div class="value">${formatVND(totalTarget)}</div></div>
+    <div class="stat"><div class="label">Số khoản</div><div class="value">${goals.length}</div></div>
+    <div class="stat"><div class="label">Tỷ lệ đạt được</div><div class="value">${overallPct}%</div></div>
+  `;
+}
+
+function renderGoalList(){
+  const listEl = document.getElementById('goalList');
+  const emptyEl = document.getElementById('emptyState');
+
+  if(goals.length===0){
+    listEl.innerHTML = '';
+    emptyEl.hidden = false;
+    return;
+  }
+  emptyEl.hidden = true;
+
+  const sorted = [...goals].sort((a,b)=> (a.createdAt||0) - (b.createdAt||0));
+  listEl.innerHTML = sorted.map(goalCardHtml).join('');
+
+  listEl.querySelectorAll('[data-action="deposit"]').forEach(btn=>btn.addEventListener('click', ()=>openDepositModal(btn.dataset.id)));
+  listEl.querySelectorAll('[data-action="history"]').forEach(btn=>btn.addEventListener('click', ()=>openHistoryModal(btn.dataset.id)));
+  listEl.querySelectorAll('[data-action="delete"]').forEach(btn=>btn.addEventListener('click', ()=>deleteGoal(btn.dataset.id)));
+  listEl.querySelectorAll('[data-action="edit-goal"]').forEach(btn=>btn.addEventListener('click', ()=>openEditGoalModal(btn.dataset.id)));
+}
+
+function renderLastBackup(){
+  let last = null;
+  try{ last = localStorage.getItem(BACKUP_KEY); }catch(e){}
+  document.getElementById('lastBackup').textContent = last ? `Lần sao lưu gần nhất: ${formatDate(last)}.` : 'Chưa sao lưu lần nào.';
+}
+
+const SEGMENT_COLORS = 8;
+function progressSegmentsHtml(g){
+  if(!g.target || g.target<=0 || !(g.deposits||[]).length) return '';
+  return g.deposits.map((d,i)=>{
+    const w = Math.min(100, (d.amount/g.target)*100);
+    if(w<=0) return '';
+    const idx = (i % SEGMENT_COLORS) + 1;
+    const tip = `${formatDate(d.date)}: +${formatVND(d.amount)}`;
+    return `<div class="progress-seg" style="width:${w}%;background:var(--series-${idx})" title="${escapeHtml(tip)}"></div>`;
+  }).join('');
+}
+
+function goalCardHtml(g){
+  const saved = goalTotal(g);
+  const pct = goalPercent(g);
+  const status = goalStatus(g);
+  const remaining = Math.max(0, g.target - saved);
+  return `
+    <div class="goal-card">
+      <div class="goal-card-top">
+        <div>
+          <h3>${escapeHtml(g.name)}</h3>
+          <div class="goal-meta">${formatDate(g.startDate)} → ${formatDate(g.endDate)}</div>
+        </div>
+        <div class="goal-actions">
+          <button class="btn-text" data-action="edit-goal" data-id="${g.id}" title="Sửa khoản" aria-label="Sửa khoản">✎</button>
+          <button class="btn-danger" data-action="delete" data-id="${g.id}" title="Xóa" aria-label="Xóa khoản">✕</button>
+        </div>
+      </div>
+      <div class="progress-row">
+        <div class="progress-track">${progressSegmentsHtml(g)}</div>
+        <div class="progress-pct">${pct}%</div>
+      </div>
+      <div class="goal-amounts">
+        <span>Đã tiết kiệm: <b>${formatVND(saved)}</b></span>
+        <span>Còn lại: <b>${formatVND(remaining)}</b></span>
+      </div>
+      <div class="goal-footer">
+        <span class="badge ${status.cls}">${status.label}</span>
+        <div class="goal-actions">
+          <button class="btn btn-secondary" data-action="history" data-id="${g.id}">Lịch sử</button>
+          <button class="btn btn-primary" data-action="deposit" data-id="${g.id}">+ Nạp tiền</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- Goal create / edit ---------- */
+const modalGoal = document.getElementById('modalGoal');
+document.getElementById('btnNewGoal').addEventListener('click', ()=>{
+  editingGoalId = null;
+  document.getElementById('formGoal').reset();
+  document.getElementById('goalStartDate').value = todayISO();
+  document.getElementById('goalModalTitle').textContent = 'Tạo khoản tiết kiệm';
+  document.getElementById('btnSubmitGoal').textContent = 'Tạo';
+  modalGoal.hidden = false;
+});
+function openEditGoalModal(goalId){
+  const g = goals.find(x=>x.id===goalId);
+  if(!g) return;
+  editingGoalId = goalId;
+  document.getElementById('goalName').value = g.name;
+  document.getElementById('goalTarget').value = g.target;
+  document.getElementById('goalStartDate').value = g.startDate;
+  document.getElementById('goalEndDate').value = g.endDate;
+  document.getElementById('goalModalTitle').textContent = 'Sửa khoản tiết kiệm';
+  document.getElementById('btnSubmitGoal').textContent = 'Lưu';
+  modalGoal.hidden = false;
+}
+document.getElementById('btnCancelGoal').addEventListener('click', ()=>modalGoal.hidden=true);
+modalGoal.addEventListener('click', e=>{ if(e.target===modalGoal) modalGoal.hidden=true; });
+
+document.getElementById('formGoal').addEventListener('submit', e=>{
+  e.preventDefault();
+  const name = document.getElementById('goalName').value.trim();
+  const target = Number(document.getElementById('goalTarget').value);
+  const startDate = document.getElementById('goalStartDate').value;
+  const endDate = document.getElementById('goalEndDate').value;
+  if(!name || target<=0 || !startDate || !endDate) return;
+  if(endDate < startDate){ alert('Ngày kết thúc phải sau ngày bắt đầu.'); return; }
+
+  const before = goals;
+  if(editingGoalId){
+    goals = goals.map(g=> g.id===editingGoalId ? {...g, name, target, startDate, endDate} : g);
+  }else{
+    goals = [...goals, { id: uid(), name, target, startDate, endDate, deposits: [], createdAt: Date.now() }];
+  }
+  if(commit()) modalGoal.hidden = true;
+  else goals = before;
+});
+
+/* ---------- Deposit ---------- */
+const modalDeposit = document.getElementById('modalDeposit');
+function openDepositModal(goalId){
+  activeGoalId = goalId;
+  editingDepositId = null;
+  document.getElementById('formDeposit').reset();
+  document.getElementById('depositDate').value = todayISO();
+  document.getElementById('depositModalTitle').textContent = 'Nhập khoản tiết kiệm';
+  document.getElementById('btnSubmitDeposit').textContent = 'Thêm';
+  modalDeposit.hidden = false;
+}
+function openEditDepositModal(goalId, depositId){
+  const g = goals.find(x=>x.id===goalId);
+  const d = g && (g.deposits||[]).find(x=>x.id===depositId);
+  if(!d) return;
+  activeGoalId = goalId;
+  editingDepositId = depositId;
+  document.getElementById('depositAmount').value = d.amount;
+  document.getElementById('depositDate').value = d.date;
+  document.getElementById('depositModalTitle').textContent = 'Sửa khoản tiết kiệm';
+  document.getElementById('btnSubmitDeposit').textContent = 'Lưu';
+  modalDeposit.hidden = false;
+}
+document.getElementById('btnCancelDeposit').addEventListener('click', ()=>modalDeposit.hidden=true);
+modalDeposit.addEventListener('click', e=>{ if(e.target===modalDeposit) modalDeposit.hidden=true; });
+
+document.getElementById('formDeposit').addEventListener('submit', e=>{
+  e.preventDefault();
+  const amount = Number(document.getElementById('depositAmount').value);
+  const date = document.getElementById('depositDate').value;
+  if(amount<=0 || !date) return;
+  const g = goals.find(x=>x.id===activeGoalId);
+  if(!g) return;
+
+  let deposits = [...(g.deposits||[])];
+  if(editingDepositId){
+    deposits = deposits.map(d=> d.id===editingDepositId ? {...d, amount, date} : d);
+  }else{
+    deposits.push({ id: uid(), amount, date });
+  }
+  deposits.sort((a,b)=> a.date.localeCompare(b.date));
+
+  const before = goals;
+  goals = goals.map(x=> x.id===g.id ? {...x, deposits} : x);
+  if(!commit()){ goals = before; return; }
+  modalDeposit.hidden = true;
+  if(!modalHistory.hidden) openHistoryModal(g.id);
+});
+
+/* ---------- History ---------- */
+const modalHistory = document.getElementById('modalHistory');
+function openHistoryModal(goalId){
+  const g = goals.find(x=>x.id===goalId);
+  if(!g) return;
+  document.getElementById('historyTitle').textContent = `Lịch sử nạp tiền — ${g.name}`;
+  const listEl = document.getElementById('historyList');
+  const deposits = g.deposits || [];
+  if(deposits.length===0){
+    listEl.innerHTML = '<li style="justify-content:center;color:var(--text-muted)">Chưa có lần nạp nào</li>';
+  }else{
+    listEl.innerHTML = [...deposits].sort((a,b)=>b.date.localeCompare(a.date)).map(d=>`
+      <li>
+        <span class="h-date">${formatDate(d.date)}</span>
+        <span class="h-amount">+${formatVND(d.amount)}</span>
+        <span class="h-actions">
+          <button type="button" class="btn-text" data-action="edit-deposit" data-goal-id="${g.id}" data-deposit-id="${d.id}" title="Sửa" aria-label="Sửa lần nạp">✎</button>
+          <button type="button" class="btn-danger" data-action="delete-deposit" data-goal-id="${g.id}" data-deposit-id="${d.id}" title="Xóa" aria-label="Xóa lần nạp">✕</button>
+        </span>
+      </li>
+    `).join('');
+  }
+  modalHistory.hidden = false;
+  listEl.querySelectorAll('[data-action="edit-deposit"]').forEach(btn=>btn.addEventListener('click', ()=>openEditDepositModal(btn.dataset.goalId, btn.dataset.depositId)));
+  listEl.querySelectorAll('[data-action="delete-deposit"]').forEach(btn=>btn.addEventListener('click', ()=>deleteDeposit(btn.dataset.goalId, btn.dataset.depositId)));
+}
+document.getElementById('btnCloseHistory').addEventListener('click', ()=>modalHistory.hidden=true);
+modalHistory.addEventListener('click', e=>{ if(e.target===modalHistory) modalHistory.hidden=true; });
+
+function deleteDeposit(goalId, depositId){
+  const g = goals.find(x=>x.id===goalId);
+  const d = g && (g.deposits||[]).find(x=>x.id===depositId);
+  if(!d) return;
+  if(!confirm(`Xóa lần nạp ${formatVND(d.amount)} ngày ${formatDate(d.date)}?`)) return;
+  const before = goals;
+  goals = goals.map(x=> x.id===goalId ? {...x, deposits:(x.deposits||[]).filter(y=>y.id!==depositId)} : x);
+  if(!commit()){ goals = before; return; }
+  openHistoryModal(goalId);
+}
+
+/* ---------- Delete goal ---------- */
+function deleteGoal(goalId){
+  const g = goals.find(x=>x.id===goalId);
+  if(!g) return;
+  if(!confirm(`Xóa khoản tiết kiệm "${g.name}"? Hành động này không thể hoàn tác.`)) return;
+  const before = goals;
+  goals = goals.filter(x=>x.id!==goalId);
+  if(!commit()) goals = before;
+}
+
+/* ---------- Backup / restore ---------- */
+document.getElementById('btnExport').addEventListener('click', async ()=>{
+  const today = todayISO();
+  const payload = { app:'so-tiet-kiem', version:1, exportedAt:new Date().toISOString(), goals };
+  const json = JSON.stringify(payload, null, 2);
+  const filename = `so-tiet-kiem-${today}.json`;
+  let done = false;
+
+  // On phones, the share sheet is the reliable way to save a file (Files, Drive, Zalo…).
+  const isTouch = window.matchMedia && matchMedia('(pointer:coarse)').matches;
+  if(isTouch && navigator.canShare){
+    try{
+      const file = new File([json], filename, {type:'application/json'});
+      if(navigator.canShare({files:[file]})){
+        await navigator.share({files:[file], title:'Sao lưu Sổ Tiết Kiệm'});
+        done = true;
+      }
+    }catch(err){
+      if(err && err.name==='AbortError') return; // user closed the share sheet
+    }
+  }
+  if(!done){
+    const url = URL.createObjectURL(new Blob([json], {type:'application/json'}));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 10000);
+  }
+  try{ localStorage.setItem(BACKUP_KEY, today); }catch(e){}
+  renderLastBackup();
+});
+
+const importInput = document.getElementById('importFile');
+document.getElementById('btnImport').addEventListener('click', ()=>{ importInput.value=''; importInput.click(); });
+importInput.addEventListener('change', async ()=>{
+  const file = importInput.files && importInput.files[0];
+  if(!file) return;
+  let imported;
+  try{
+    const data = JSON.parse(await file.text());
+    imported = normalizeGoals(Array.isArray(data) ? data : data && data.goals);
+  }catch(e){
+    alert('Tệp không đọc được. Hãy chọn đúng tệp sao lưu (.json) của Sổ Tiết Kiệm.');
+    return;
+  }
+  const msg = goals.length
+    ? `Tệp có ${imported.length} khoản. Khôi phục sẽ THAY THẾ ${goals.length} khoản đang có trên máy. Tiếp tục?`
+    : `Khôi phục ${imported.length} khoản từ tệp sao lưu?`;
+  if(!confirm(msg)) return;
+  const before = goals;
+  goals = imported;
+  if(!commit()){ goals = before; return; }
+  alert(`Đã khôi phục ${imported.length} khoản.`);
+});
+
+function normalizeGoals(list){
+  if(!Array.isArray(list)) throw new Error('bad format');
+  const isDate = s => typeof s==='string' && /^\d{4}-\d{2}-\d{2}$/.test(s);
+  return list.map(g=>{
+    if(!g || typeof g.name!=='string' || !(Number(g.target)>0) || !isDate(g.startDate) || !isDate(g.endDate)) throw new Error('bad goal');
+    const deposits = (Array.isArray(g.deposits) ? g.deposits : []).map(d=>{
+      if(!d || !(Number(d.amount)>0) || !isDate(d.date)) throw new Error('bad deposit');
+      return { id: String(d.id || uid()), amount: Number(d.amount), date: d.date };
+    }).sort((a,b)=> a.date.localeCompare(b.date));
+    return {
+      id: String(g.id || uid()),
+      name: g.name,
+      target: Number(g.target),
+      startDate: g.startDate,
+      endDate: g.endDate,
+      deposits,
+      createdAt: Number(g.createdAt) || Date.now()
+    };
+  });
+}
+
+/* ---------- Offline ---------- */
+if('serviceWorker' in navigator && (location.protocol==='https:' || location.hostname==='localhost' || location.hostname==='127.0.0.1')){
+  window.addEventListener('load', ()=> navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+
+render();
+</script>
+</body>
+</html>
